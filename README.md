@@ -96,7 +96,7 @@ nginx config file in `nginx/conf/nginx.conf` should be enough to test.
 To start:
 
 ```
-./scripts/nginx-start
+./scripts/start-nginx
 ```
 
 You can test the basic functionality with:
@@ -159,7 +159,7 @@ dt push -a api-gateway -e prod
  dependencies for travis.
 
  If you are working on OS X consider using [openresty](http://openresty.org) for
- nginx. It comes configured to work with the api-gateway.
+ nginx. It comes configured to work with the api-gateway. See `scripts/install-openresty.sh`
 
  If you need to add additional nginx modules to openresty you might find it
  helpful to install openresty with homebrew. If you go this route you can add
