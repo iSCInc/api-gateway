@@ -13,7 +13,6 @@ local util = require "util"
 local http = require "resty.http"
 
 function nginx.init(config)
-  config.HELIOS_URL = util.strip_trailing_slash(config.HELIOS_URL)
   config.SERVICE_LB_URL = util.strip_trailing_slash(config.SERVICE_LB_URL)
 
   local helios = helios:new(ngx)

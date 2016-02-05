@@ -6,3 +6,6 @@ t/lua
 t/servroot
 tmp/
 .R*
+*.ipr
+*.iws
+*.iml

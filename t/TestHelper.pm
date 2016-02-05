@@ -28,7 +28,6 @@ sub create_lua_config {
     open(my $lua_config, '>', $filename) || die "Couldn't open filename $filename!";
     print $lua_config qq{
       local config = {}
-      config.HELIOS_URL = ""
       config.SERVICE_LB_URL = ""
       return config
     };
