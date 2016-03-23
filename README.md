@@ -96,6 +96,7 @@ nginx config file in `nginx/conf/nginx.conf` should be enough to test.
 To start:
 
 ```
+./scripts/templatize
 ./scripts/start-nginx
 ```
 
@@ -142,8 +143,31 @@ dt push -a api-gateway -e prod
 
 ## Installing luarocks & openresty Dependencies
 
+ See `scripts/install-luarocks.sh` for the script used to install the
+ dependencies for travis. See also `scripts/install-openresty.sh`.
+
+## Installation on OS X
+
+ If you are working on OS X consider using [openresty](http://openresty.org) for
+ nginx. It comes configured to work with the api-gateway. You can install `openresty`
+ on OS X using
+
  ```
- export LUAJIT_PATH=/usr/local/Cellar/openresty/1.7.10.1/luajit # set to your local path
+ brew install homebrew/nginx/openresty
+ ```
+
+ If you need to add additional nginx modules to openresty you might find it
+ helpful to install openresty with homebrew. If you go this route you can add
+ nginx modules to the configuration with `brew edit openresty`. Then under the
+ `install` block you can add additional modules by adding a line to the `args`
+ array e.g.`"--with-http_realip_module"`.
+
+To install the Lua dependencies you will need `luarocks`. The script below can
+be used to install `luarocks` to the luajit used by the `openresty` installed by homebrew.
+
+```
+ # set to your local path; the version might be different
+ export LUAJIT_PATH=/usr/local/Cellar/openresty/1.7.10.1/luajit
  wget http://luarocks.org/releases/luarocks-2.0.11.tar.gz
  tar -xzvf luarocks-2.0.11.tar.gz
  cd luarocks-2.0.13/
@@ -153,19 +177,31 @@ dt push -a api-gateway -e prod
 	   --with-lua-include=$LUAJIT_PATH/include/luajit-2.1
  make
  make install
- ```
+```
 
- See `scripts/install-luarocks.sh` for the script used to install the
- dependencies for travis.
+### Troubleshooting
 
- If you are working on OS X consider using [openresty](http://openresty.org) for
- nginx. It comes configured to work with the api-gateway. See `scripts/install-openresty.sh`
+Below are some problems you may encounter when trying to install on OS X. If you
+get the following error from running `luarocks`
 
- If you need to add additional nginx modules to openresty you might find it
- helpful to install openresty with homebrew. If you go this route you can add
- nginx modules to the configuration with `brew edit openresty`. Then under the
- `install` block you can add additional modules by adding a line to the `args`
- array e.g.`"--with-http_realip_module"`.
+```
+attempt to call global 'tonumber' (a nil value)
+```
+
+Add the following line to the top of `$LUAJIT_PATH/bin/luarocks`:
+```
+local tonumber = function(s) return s + 0 end
+```
+
+If you get the following error when running `luarocks`:
+
+```
+luajit-2.1.0-alpha: bad interpreter: No such file or directory
+```
+
+Edit `$LUAJIT_PATH/bin/luarocks` and remove the interpreter suffix on the first
+line so that the fully qualified path ends in `luajit` instead of
+`luajit-2.1.0-alpha`.
 
 ## Environement variables
 
