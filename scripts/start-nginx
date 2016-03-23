@@ -2,4 +2,13 @@
 # Set NGINX_BIN to the nginx binary if you want something different
 NGINX=${NGINX_BIN:-nginx}
 WORKING=$(dirname $0)/../nginx
+mkdir -p $WORKING/logs
+
+if [ ! -d /var/log/nginx ]; then
+  echo "Please create /var/log/nginx as your user:"
+  echo "sudo mkdir /var/log/nginx && sudo chown $USER /var/log/nginx"
+  echo "Aborting"
+  exit 1
+fi
+
 $NGINX -p $WORKING/ -c conf/nginx.conf 

@@ -6,13 +6,13 @@
 WORKING=$(dirname $0)/..
 CONSUL_URI=$1
 if [[ -z $CONSUL_URI ]]; then
-	echo Usage: scripts/templatize localhost:8500
-	exit 1
+  export CONSUL_URI=consul.service.sjc-dev.consul:8500
 fi
 
 if [[ -z $WIKIA_ENVIRONMENT ]]; then
   export WIKIA_ENVIRONMENT="dev"
 fi
+
 consul-template -consul $CONSUL_URI\
   -log-level=info\
   -template "$WORKING/templates/src/config.lua:$WORKING/src/config.lua"\

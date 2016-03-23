@@ -96,6 +96,7 @@ nginx config file in `nginx/conf/nginx.conf` should be enough to test.
 To start:
 
 ```
+./scripts/templatize
 ./scripts/start-nginx
 ```
 
