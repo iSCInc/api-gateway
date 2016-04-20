@@ -18,4 +18,5 @@ dependencies = {
    "busted = 2.0.rc11-0",
    "lua-cjson = 2.1.0-1",
    "httpclient = 0.1.0-7",
+   "lua-resty-cookie = 0.1.0-1"
 }
