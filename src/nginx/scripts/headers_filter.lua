@@ -7,4 +7,4 @@ if ngx.ctx.upstream_name and ngx.ctx.upstream_name ~= "__not_found" then
     ngx.header['X-Upstream-Name'] = ngx.ctx.upstream_name 
 end
 
-ngx.header['X-Served-By'] = resp_headers['x-served-by'] or ngx.var.upstream_addr
+ngx.header['X-Served-By'] = resp_headers['X-Served-By'] or ngx.var.upstream_addr
