@@ -1,11 +1,9 @@
 -- package auth
-
-local USER_ID_HEADER = "X-Wikia-UserId"
-local ACCESS_TOKEN_HEADER = "X-Wikia-AccessToken"
+local headers = require("request_headers") 
 
 local auth = {
-  USER_ID_HEADER = USER_ID_HEADER,
-  ACCESS_TOKEN_HEADER = ACCESS_TOKEN_HEADER,
+  USER_ID_HEADER = headers.USER_ID,
+  ACCESS_TOKEN_HEADER = headers.ACCESS_TOKEN,
 }
 
 local cookie = require "cookie"

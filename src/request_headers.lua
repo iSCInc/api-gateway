@@ -2,7 +2,15 @@ local request = {
     BEACON_ID = 'X-Beacon-Id',
     CLIENT_IP = 'X-Client-Ip',
     REQUEST_ID = 'X-Trace-Id',
+    USER_ID = "X-Wikia-UserId",
+    ACCESS_TOKEN = "X-Wikia-AccessToken",
     FASTLY_CLIENT_IP = 'Fastly-Client-IP',
+}
+function request.sanitize(ngx){
+    ngx.req.clear_header(request.BEACON_ID)
+    ngx.req.clear_header(request.CLIENT_IP)
+    ngx.req.clear_header(request.REQUEST_ID)
+    ngx.req.clear_header(request.USER_ID_HEADER)
 }
 
 function request.set_headers(ngx)
