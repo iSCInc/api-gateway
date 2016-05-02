@@ -1,6 +1,7 @@
 local globals = require "test.helpers.globals"
 local cookie = require "cookie"
 local auth = require "auth"
+local auth = require "request_headers"
 local auth_mock = require "mocks.auth"
 
 describe("nginx module tests", function()
@@ -36,7 +37,7 @@ describe("nginx module tests", function()
 
       assert.stub(ngx.exec).was.called_with("@service")
 
-      assert.stub(ngx.req.set_header).was_called_with(auth.USER_ID_HEADER, user_id)
+      assert.stub(ngx.req.set_header).was_called_with(headers.USER_ID_HEADER, user_id)
       assert.stub(ngx.req.set_header).was_called_with(cookie.COOKIE_HEADER, "")
     end)
 
@@ -47,7 +48,7 @@ describe("nginx module tests", function()
 
       assert.stub(ngx.exec).was.called_with("@service")
 
-      assert.stub(ngx.req.set_header).was_called_with(auth.USER_ID_HEADER, "")
+      assert.stub(ngx.req.set_header).was_called_with(headers.USER_ID_HEADER, "")
       assert.stub(ngx.req.set_header).was_called_with(cookie.COOKIE_HEADER, "")
     end)
 

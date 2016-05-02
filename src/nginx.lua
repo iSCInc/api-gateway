@@ -11,6 +11,7 @@ local helios = require "gateway.helios"
 local cookie = require "cookie"
 local util = require "util"
 local http = require "resty.http"
+local headers = require "request_headers"
 
 function nginx.init(config)
   config.SERVICE_LB_URL = util.strip_trailing_slash(config.SERVICE_LB_URL)
@@ -53,17 +54,16 @@ function nginx.authenticate(app, headers)
 end
 
 function nginx.service_proxy(ngx, user_id)
-  -- the X-Wikia-UserId header should either be set by a valid
+  -- the X-User-Id header should either be set by a valid
   -- user id or cleared
   if user_id then
-    ngx.req.set_header(auth.USER_ID_HEADER, user_id)
-  else
-    ngx.req.set_header(auth.USER_ID_HEADER, "")
+    ngx.req.set_header(headers.USER_ID, user_id)
+    ngx.req.set_header(headers.WIKIA_USER_ID, user_id) --deprecated
   end
 
   -- clear the cookie; it should not be sent to the backend
   ngx.req.set_header(cookie.COOKIE_HEADER, "")
-  ngx.req.set_header(auth.ACCESS_TOKEN_HEADER, "")
+  ngx.req.set_header(headers.ACCESS_TOKEN, "")
 
   return ngx.exec("@service")
 end
