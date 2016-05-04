@@ -38,6 +38,9 @@ world
 === TEST 2: X-Forwarded-For
 --- http_config eval: $::HttpConfig
 --- config
+    set_by_lua_file $stripped_uri "/gateway/src/nginx/scripts/strip_service_name_from_uri.lua";
+    header_filter_by_lua_file "$api_gateway_root/src/nginx/scripts/headers_filter.lua";
+    
     location /test {
     content_by_lua '
       local router = require("nginx/router")
@@ -47,15 +50,10 @@ world
 
     location @service {
       set_by_lua $upstream '
-        local upstream = require("upstream")
-        return upstream.find(ngx.var.request_uri);
-      ';
-
-      set_by_lua $stripped_uri '
-        local util = require("util")
-        local stripped_uri = util.get_rest_after_url_prefix(ngx.var.request_uri)
-        return util.strip_leading_slash(stripped_uri)
-      ';
+        local upstream = require("upstream")    
+        ngx.ctx.upstream_name = upstream.find(ngx.var.request_uri)
+        return ngx.ctx.upstream_name
+      ';      
 
       access_by_lua '
         if ngx.var.upstream == "__not_found" then

@@ -40,7 +40,10 @@ sub create_http_config {
   lua_package_path '${pwd}/t/lua/?.lua;${pwd}/src/?.lua;/usr/local/openresty/lualib/?.lua;;';
   upstream test {
     server ${backend};
-  }
+  }    
+  map \$host \$api_gateway_root {
+    default "${pwd}";
+  }  
 };
 
 }
