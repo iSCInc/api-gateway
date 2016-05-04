@@ -36,7 +36,7 @@ describe("authenticated request", function()
   end)
 
   it("service request is successful", function()
-    local response = client:get(SERVICE_URL, { ["headers"] = { [auth.ACCESS_TOKEN_HEADER] = user.access_token } })
+    local response = client:get(SERVICE_URL, { ["headers"] = { [headers.ACCESS_TOKEN] = user.access_token } })
     assert.truthy(response)
     assert.are.equal(200, response.code)
   end)

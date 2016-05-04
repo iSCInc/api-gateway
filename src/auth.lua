@@ -1,8 +1,7 @@
 -- package auth
-local headers = require("request_headers") 
+local headers = require "request_headers" 
 
-local auth = { 
-}
+local auth = {}
 
 local cookie = require "cookie"
 

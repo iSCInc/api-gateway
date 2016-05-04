@@ -3,7 +3,7 @@ local VER = "0.1"
 version = VER .. "-0"
 
 source = {
-  url = "file://src",
+  url = "https://github.com/Wikia/api-gateway",
 }
 description = {
 	license = "PRIVATE",
