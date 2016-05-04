@@ -40,7 +40,13 @@ sub create_http_config {
   lua_package_path '${pwd}/t/lua/?.lua;${pwd}/src/?.lua;/usr/local/openresty/lualib/?.lua;;';
   upstream test {
     server ${backend};
-  }    
+  }
+  limit_req_zone Client-Ip zone=registration:100m rate=12r/m;
+
+  log_format log_format_with_perf '\$remote_addr - \$remote_user [\$time_local] '
+                                '"\$request" \$status \$body_bytes_sent '
+                                '\$request_length \$request_time '
+                                '"\$http_referer" "\$http_user_agent" "\$gzip_ratio"';
   map \$host \$api_gateway_root {
     default "${pwd}";
   }  

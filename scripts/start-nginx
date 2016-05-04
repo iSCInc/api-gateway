@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Set NGINX_BIN to the nginx binary if you want something different
 NGINX=${NGINX_BIN:-nginx}
 WORKING=$(dirname $0)/../nginx
