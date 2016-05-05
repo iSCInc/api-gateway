@@ -7,7 +7,9 @@ RUN apk --no-cache --update add --virtual build-deps make gcc linux-headers musl
 COPY api_gateway-0.1-0.rockspec ./
 RUN /opt/openresty/luajit/bin/luarocks install api_gateway-0.1-0.rockspec
 RUN PERL_MM_USE_DEFAULT=1 perl -MCPAN -e 'install Test::Nginx::Socket'
+RUN mkdir /opt/openresty/nginx/logs
+EXPOSE 8100
 #RUN apk del build-deps 
 ENV PATH $PATH:/opt/openresty/luajit/bin 
-COPY ./ ./
+#COPY ./ ./
 
