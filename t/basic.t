@@ -104,3 +104,14 @@ Cookie: access_token=token
 X-User-Id: 90061
 X-Wikia-UserId: 90061
 --- error_code: 200
+
+=== TEST 3: Headers - upstream name and X-Served-By
+--- http_config eval: $::HttpConfig
+--- config eval: $::Config
+
+--- request
+    GET /test/headers
+--- response_headers
+X-Upstream-Name: test
+X-Served-By: 127.0.0.1:1984
+--- error_code: 200
