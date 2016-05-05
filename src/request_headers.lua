@@ -3,7 +3,7 @@ local request = {
     CLIENT_IP = 'X-Client-Ip',
     REQUEST_ID = 'X-Trace-Id',
     WIKIA_USER_ID = "X-Wikia-UserId",
-    USER_ID = "X-Wikia-UserId",
+    USER_ID = "X-User-Id",
     ACCESS_TOKEN = "X-Wikia-AccessToken",
     FASTLY_CLIENT_IP = 'Fastly-Client-IP',
 }
@@ -23,8 +23,7 @@ function request.set_headers(ngx)
     ngx.req.set_header(request.CLIENT_IP, req_headers[request.FASTLY_CLIENT_IP] or ngx.var.remote_addr)
 
     local request_id = uuid.gen()
-    ngx.req.set_header(request.REQUEST_ID, request_id)
-    ngx.header[request.REQUEST_ID] = request_id
+    ngx.req.set_header(request.REQUEST_ID, request_id)    
 end
 
 return request
