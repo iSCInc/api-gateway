@@ -23,7 +23,7 @@ function request.set_headers(ngx)
     ngx.req.set_header(request.CLIENT_IP, req_headers[request.FASTLY_CLIENT_IP] or ngx.var.remote_addr)
 
     local request_id = uuid.gen()
-    ngx.req.set_header(request.REQUEST_ID, request_id)    
+    ngx.req.set_header(request.REQUEST_ID, request_id)
 end
 
 return request

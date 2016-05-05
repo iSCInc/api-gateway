@@ -29,7 +29,7 @@ end
 
 function auth:cookie_string_to_user_id(cookie_string)
   local cookie_map = cookie.parse(cookie_string)
-  if cookie_map.access_token then
+  if cookie_map.access_token then    
     return self:authenticate_and_return_user_id(cookie_map.access_token)
   end
 

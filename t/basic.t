@@ -23,9 +23,15 @@ our $Config = << 'CONFIG';
             ngx.say(ngx.var.host);            
         } 
     }
+    
+    location /info {
+        content_by_lua_block {            
+            ngx.say('{"status": "git", "user_id": "90061"}');
+        }
+    }    
 CONFIG
 
-plan tests => repeat_each() * (4 * blocks()) - 2;
+plan tests => repeat_each() * (3 * blocks()) + 1; # i don't understand this :(
 
 no_shuffle();
 no_root_location();
@@ -38,7 +44,7 @@ __DATA__
     location /echo {
         echo_before_body hello;
         echo world;
-    }
+    }    
 --- request
     GET /echo
 --- response_body
@@ -51,7 +57,9 @@ world
 --- config eval: $::Config  
 --- more_headers eval
 "Fastly-Client-IP: 10.10.10.10
-Cookie: wikia_beacon_id=somebacon"
+Cookie: wikia_beacon_id=somebacon
+X-User-Id: someUserId
+X-Wikia-UserId: someUserId"
 --- request
     GET /test/headers
 --- response_headers
@@ -63,11 +71,36 @@ X-Wikia-UserId:
 --- error_code: 200
 
 
-=== TEST 2: Headers
+=== TEST 2: Headers -trace id
 --- http_config eval: $::HttpConfig
 --- config eval: $::Config
 --- request
     GET /test/headers
 --- response_headers_like    
 X-Trace-Id: [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}
+--- error_code: 200
+
+=== TEST 2: Headers - can't provide x-client-ip from outside
+--- http_config eval: $::HttpConfig
+--- config eval: $::Config
+--- more_headers
+X-Client-Ip: 10.10.10.10
+--- request
+    GET /test/headers
+--- response_headers
+Fastly-Client-IP:
+X-Client-Ip: 127.0.0.1
+--- error_code: 200
+
+
+=== TEST 2: Headers - fake helios
+--- http_config eval: $::HttpConfig
+--- config eval: $::Config
+--- more_headers
+Cookie: access_token=token
+--- request
+    GET /test/headers
+--- response_headers
+X-User-Id: 90061
+X-Wikia-UserId: 90061
 --- error_code: 200

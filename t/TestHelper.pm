@@ -22,12 +22,11 @@ sub create_configured_locations {
 
 sub create_lua_config {
     my ($filename) = @_;
-    if (-e $filename) {
-      return;
-    }
+
     open(my $lua_config, '>', $filename) || die "Couldn't open filename $filename!";
     print $lua_config qq{
       local config = {}
+      config.AUTH_UPSTREAM_NAME = "test"
       config.SERVICE_LB_URL = ""
       return config
     };
