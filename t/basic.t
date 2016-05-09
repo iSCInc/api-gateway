@@ -12,15 +12,16 @@ create_configured_locations($pwd . '/t/lua/configured_locations.lua');
 create_lua_config($pwd . '/src/config.lua');
 our $HttpConfig = create_http_config($pwd, "localhost:1984");
 our $Config = << 'CONFIG';
-    include "/gateway/nginx/conf/api-gateway/conf.d/*.conf";
+    include "/gateway/nginx/conf/api-gateway/conf.d/common.conf";
     include "/gateway/nginx/conf/api-gateway/locations/*.conf";
     location /headers {
         content_by_lua_block {
             local h = ngx.req.get_headers(100);
             for key,value in pairs(h) do 
-                ngx.header[key] = value 
+                ngx.header[key] = value
             end            
-            ngx.say(ngx.var.host);            
+
+            ngx.say(ngx.var.host);
         } 
     }
     
@@ -31,9 +32,8 @@ our $Config = << 'CONFIG';
     }    
 CONFIG
 
-plan tests => repeat_each() * (3 * blocks()) + 1; # i don't understand this :(
+plan tests => repeat_each(3) * 21; 
 
-no_shuffle();
 no_root_location();
 run_tests();
 __DATA__
@@ -55,14 +55,15 @@ world
 === TEST 2: Headers
 --- http_config eval: $::HttpConfig
 --- config eval: $::Config  
---- more_headers eval
-"Fastly-Client-IP: 10.10.10.10
+--- more_headers
+Fastly-Client-IP: 10.10.10.10
 Cookie: wikia_beacon_id=somebacon
 X-User-Id: someUserId
-X-Wikia-UserId: someUserId"
+X-Wikia-UserId: someUserId
 --- request
     GET /test/headers
 --- response_headers
+X-Forwarded-For: 127.0.0.1
 Fastly-Client-IP: 10.10.10.10
 X-Client-Ip: 10.10.10.10
 X-Beacon-Id: somebacon
@@ -71,7 +72,7 @@ X-Wikia-UserId:
 --- error_code: 200
 
 
-=== TEST 2: Headers -trace id
+=== TEST 3: Headers - trace id
 --- http_config eval: $::HttpConfig
 --- config eval: $::Config
 --- request
@@ -80,7 +81,7 @@ X-Wikia-UserId:
 X-Trace-Id: [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}
 --- error_code: 200
 
-=== TEST 2: Headers - can't provide x-client-ip from outside
+=== TEST 4: Headers - can't provide x-client-ip from outside
 --- http_config eval: $::HttpConfig
 --- config eval: $::Config
 --- more_headers
@@ -93,7 +94,7 @@ X-Client-Ip: 127.0.0.1
 --- error_code: 200
 
 
-=== TEST 2: Headers - fake helios
+=== TEST 5: Headers - fake helios
 --- http_config eval: $::HttpConfig
 --- config eval: $::Config
 --- more_headers
@@ -105,13 +106,24 @@ X-User-Id: 90061
 X-Wikia-UserId: 90061
 --- error_code: 200
 
-=== TEST 3: Headers - upstream name and X-Served-By
+=== TEST 6: Headers - upstream name and X-Served-By
 --- http_config eval: $::HttpConfig
 --- config eval: $::Config
-
 --- request
     GET /test/headers
 --- response_headers
 X-Upstream-Name: test
-X-Served-By: 127.0.0.1:1984
+--- response_headers_like
+X-Served-By: .*127.0.0.1:1984.*
+--- error_code: 200
+
+=== TEST 7: Headers - X-Forwarded-For
+--- http_config eval: $::HttpConfig
+--- config eval: $::Config
+--- more_headers
+X-Forwarded-For: upstream_server
+--- request
+    GET /test/headers
+--- response_headers
+X-Forwarded-For: upstream_server, 127.0.0.1
 --- error_code: 200
