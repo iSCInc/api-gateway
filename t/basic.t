@@ -17,22 +17,22 @@ our $Config = << 'CONFIG';
     location /headers {
         content_by_lua_block {
             local h = ngx.req.get_headers(100);
-            for key,value in pairs(h) do 
+            for key,value in pairs(h) do
                 ngx.header[key] = value
-            end            
+            end
 
             ngx.say(ngx.var.host);
-        } 
+        }
     }
-    
+
     location /info {
-        content_by_lua_block {            
+        content_by_lua_block {
             ngx.say('{"status": "git", "user_id": "90061"}');
         }
-    }    
+    }
 CONFIG
 
-plan tests => repeat_each(3) * 21; 
+plan tests => repeat_each(3) * 21;
 
 no_root_location();
 run_tests();
@@ -44,7 +44,7 @@ __DATA__
     location /echo {
         echo_before_body hello;
         echo world;
-    }    
+    }
 --- request
     GET /echo
 --- response_body
@@ -54,7 +54,7 @@ world
 
 === TEST 2: Headers
 --- http_config eval: $::HttpConfig
---- config eval: $::Config  
+--- config eval: $::Config
 --- more_headers
 Fastly-Client-IP: 10.10.10.10
 Cookie: wikia_beacon_id=somebacon
@@ -77,7 +77,7 @@ X-Wikia-UserId:
 --- config eval: $::Config
 --- request
     GET /test/headers
---- response_headers_like    
+--- response_headers_like
 X-Trace-Id: [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}
 --- error_code: 200
 
