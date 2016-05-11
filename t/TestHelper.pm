@@ -22,12 +22,11 @@ sub create_configured_locations {
 
 sub create_lua_config {
     my ($filename) = @_;
-    if (-e $filename) {
-      return;
-    }
+
     open(my $lua_config, '>', $filename) || die "Couldn't open filename $filename!";
     print $lua_config qq{
       local config = {}
+      config.AUTH_UPSTREAM_NAME = "test"
       config.SERVICE_LB_URL = ""
       return config
     };
@@ -41,6 +40,15 @@ sub create_http_config {
   upstream test {
     server ${backend};
   }
+  limit_req_zone Client-Ip zone=registration:100m rate=12r/m;
+
+  log_format log_format_with_perf '\$remote_addr - \$remote_user [\$time_local] '
+                                '"\$request" \$status \$body_bytes_sent '
+                                '\$request_length \$request_time '
+                                '"\$http_referer" "\$http_user_agent" "\$gzip_ratio"';
+  map \$host \$api_gateway_root {
+    default "${pwd}";
+  }  
 };
 
 }

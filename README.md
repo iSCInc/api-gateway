@@ -52,10 +52,10 @@ The integration tests require the following environment variables:
 If the `access_token` cookie exists and is not empty then an attempt will be
 made to authenticate the token against helios and retrieve the user id of the
 user to whom the token belongs. If a user id is returned from helios then that
-user id will be provided in the `X-Wikia-UserId` header sent to the service.
+user id will be provided in the `X-User-Id` (also `X-Wikia-UserId` for compatibility with older software) header sent to the service.
 
 If the `access_token` cookie is absent, expired, or invalid then no
-`X-Wikia-UserId` will be sent to the service.
+`X-User-Id` will be sent to the service.
 
 ## Service Routing
 

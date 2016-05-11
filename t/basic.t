@@ -8,17 +8,34 @@ use lib dirname(abs_path($0));
 use TestHelper;
 
 our $pwd = cwd();
-our $APIGatewayTestMock = $ENV{"API_GATEWAY_TEST_MOCK"} || "wikia-api-gateway-backends.getsandbox.com";
-
 create_configured_locations($pwd . '/t/lua/configured_locations.lua');
 create_lua_config($pwd . '/src/config.lua');
-our $HttpConfig = create_http_config($pwd, $APIGatewayTestMock);
+our $HttpConfig = create_http_config($pwd, "localhost:1984");
+our $Config = << 'CONFIG';
+    include "/gateway/nginx/conf/api-gateway/conf.d/common.conf";
+    include "/gateway/nginx/conf/api-gateway/locations/*.conf";
+    location /headers {
+        content_by_lua_block {
+            local h = ngx.req.get_headers(100);
+            for key,value in pairs(h) do
+                ngx.header['MIRRORED-' .. key] = value
+            end
 
-plan tests => repeat_each(1) * (2 * blocks());
+            ngx.say(ngx.var.host);
+        }
+    }
 
-no_shuffle();
+    location /info {
+        content_by_lua_block {
+            ngx.say('{"status": "git", "user_id": "90061"}');
+        }
+    }
+CONFIG
+
+plan tests => repeat_each(3) * 23;
+
+no_root_location();
 run_tests();
-
 __DATA__
 
 === TEST 1: sanity
@@ -35,44 +52,89 @@ hello
 world
 --- error_code: 200
 
-=== TEST 2: X-Forwarded-For
+=== TEST 2: Headers
 --- http_config eval: $::HttpConfig
---- config
-    location /test {
-    content_by_lua '
-      local router = require("nginx/router")
-      return router.route()
-      ';
-    }
-
-    location @service {
-      set_by_lua $upstream '
-        local upstream = require("upstream")
-        return upstream.find(ngx.var.request_uri);
-      ';
-
-      set_by_lua $stripped_uri '
-        local util = require("util")
-        local stripped_uri = util.get_rest_after_url_prefix(ngx.var.request_uri)
-        return util.strip_leading_slash(stripped_uri)
-      ';
-
-      access_by_lua '
-        if ngx.var.upstream == "__not_found" then
-          ngx.status = ngx.HTTP_NOT_FOUND
-          ngx.say("Invalid service resource")
-        else
-          return
-        end';
-
-      proxy_set_header Host $host;
-      proxy_pass http://$upstream/$stripped_uri;
-    }
---- more_headers eval
-"Fastly-Client-IP: 10.10.10.10
-Host: $::APIGatewayTestMock"
+--- config eval: $::Config
+--- more_headers
+Fastly-Client-IP: 10.10.10.10
+Cookie: wikia_beacon_id=somebacon
+X-User-Id: someUserId
+X-Wikia-UserId: someUserId
 --- request
-    GET /test/x-forwarded-for
---- response_body_like
-.*"ip": "10.10.10.10".*
+    GET /test/headers
+--- response_headers
+MIRRORED-X-Forwarded-For: 127.0.0.1
+MIRRORED-Fastly-Client-IP: 10.10.10.10
+MIRRORED-X-Client-Ip: 10.10.10.10
+MIRRORED-X-Beacon-Id: somebacon
+MIRRORED-X-User-Id:
+MIRRORED-X-Wikia-UserId:
+--- response_headers_like
+MIRRORED-X-Trace-Id: [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}
+--- error_code: 200
+
+
+=== TEST 3: Headers - trace id
+--- http_config eval: $::HttpConfig
+--- config eval: $::Config
+--- request
+    GET /test/headers
+--- response_headers_like
+MIRRORED-X-Trace-Id: [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}
+--- error_code: 200
+
+=== TEST 4: Headers - can't provide x-client-ip from outside
+--- http_config eval: $::HttpConfig
+--- config eval: $::Config
+--- more_headers
+X-Client-Ip: 10.10.10.10
+--- request
+    GET /test/headers
+--- response_headers
+MIRRORED-Fastly-Client-IP:
+MIRRORED-X-Client-Ip: 127.0.0.1
+--- error_code: 200
+
+
+=== TEST 5: Headers - fake helios
+--- http_config eval: $::HttpConfig
+--- config eval: $::Config
+--- more_headers
+Cookie: access_token=token
+--- request
+    GET /test/headers
+--- response_headers
+MIRRORED-X-User-Id: 90061
+MIRRORED-X-Wikia-UserId: 90061
+--- error_code: 200
+
+=== TEST 6: Headers - upstream name and X-Served-By
+--- http_config eval: $::HttpConfig
+--- config eval: $::Config
+--- request
+    GET /test/headers
+--- response_headers
+X-Upstream-Name: test
+--- response_headers_like
+X-Served-By: .*127.0.0.1:1984.*
+--- error_code: 200
+
+=== TEST 7: Headers - X-Forwarded-For
+--- http_config eval: $::HttpConfig
+--- config eval: $::Config
+--- more_headers
+X-Forwarded-For: upstream_server
+--- request
+    GET /test/headers
+--- response_headers
+MIRRORED-X-Forwarded-For: upstream_server, 127.0.0.1
+--- error_code: 200
+
+=== TEST 8: Headers - returns trace-id
+--- http_config eval: $::HttpConfig
+--- config eval: $::Config
+--- request
+    GET /test/headers
+--- response_headers_like
+X-Trace-Id: [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}
 --- error_code: 200
