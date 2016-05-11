@@ -25,6 +25,7 @@ function request.set_headers(ngx)
     local uuid = require('uuid')
     local request_id = uuid.gen()
     ngx.req.set_header(request.REQUEST_ID, request_id)
+    ngx.header[request.REQUEST_ID] = tostring(request_id)
 end
 
 return request

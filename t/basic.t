@@ -18,7 +18,7 @@ our $Config = << 'CONFIG';
         content_by_lua_block {
             local h = ngx.req.get_headers(100);
             for key,value in pairs(h) do
-                ngx.header[key] = value
+                ngx.header['MIRRORED-' .. key] = value
             end
 
             ngx.say(ngx.var.host);
@@ -32,7 +32,7 @@ our $Config = << 'CONFIG';
     }
 CONFIG
 
-plan tests => repeat_each(3) * 21;
+plan tests => repeat_each(3) * 23;
 
 no_root_location();
 run_tests();
@@ -63,12 +63,14 @@ X-Wikia-UserId: someUserId
 --- request
     GET /test/headers
 --- response_headers
-X-Forwarded-For: 127.0.0.1
-Fastly-Client-IP: 10.10.10.10
-X-Client-Ip: 10.10.10.10
-X-Beacon-Id: somebacon
-X-User-Id:
-X-Wikia-UserId:
+MIRRORED-X-Forwarded-For: 127.0.0.1
+MIRRORED-Fastly-Client-IP: 10.10.10.10
+MIRRORED-X-Client-Ip: 10.10.10.10
+MIRRORED-X-Beacon-Id: somebacon
+MIRRORED-X-User-Id:
+MIRRORED-X-Wikia-UserId:
+--- response_headers_like
+MIRRORED-X-Trace-Id: [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}
 --- error_code: 200
 
 
@@ -78,7 +80,7 @@ X-Wikia-UserId:
 --- request
     GET /test/headers
 --- response_headers_like
-X-Trace-Id: [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}
+MIRRORED-X-Trace-Id: [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}
 --- error_code: 200
 
 === TEST 4: Headers - can't provide x-client-ip from outside
@@ -89,8 +91,8 @@ X-Client-Ip: 10.10.10.10
 --- request
     GET /test/headers
 --- response_headers
-Fastly-Client-IP:
-X-Client-Ip: 127.0.0.1
+MIRRORED-Fastly-Client-IP:
+MIRRORED-X-Client-Ip: 127.0.0.1
 --- error_code: 200
 
 
@@ -102,8 +104,8 @@ Cookie: access_token=token
 --- request
     GET /test/headers
 --- response_headers
-X-User-Id: 90061
-X-Wikia-UserId: 90061
+MIRRORED-X-User-Id: 90061
+MIRRORED-X-Wikia-UserId: 90061
 --- error_code: 200
 
 === TEST 6: Headers - upstream name and X-Served-By
@@ -125,5 +127,14 @@ X-Forwarded-For: upstream_server
 --- request
     GET /test/headers
 --- response_headers
-X-Forwarded-For: upstream_server, 127.0.0.1
+MIRRORED-X-Forwarded-For: upstream_server, 127.0.0.1
+--- error_code: 200
+
+=== TEST 8: Headers - returns trace-id
+--- http_config eval: $::HttpConfig
+--- config eval: $::Config
+--- request
+    GET /test/headers
+--- response_headers_like
+X-Trace-Id: [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}
 --- error_code: 200
