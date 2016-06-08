@@ -6,6 +6,7 @@ local request = {
     USER_ID = "X-User-Id",
     ACCESS_TOKEN = "X-Wikia-AccessToken",
     FASTLY_CLIENT_IP = 'Fastly-Client-IP',
+    SCHWARTZ_TOKEN = 'X-Wikia-Schwartz',
 }
 
 function request.sanitize(ngx)
@@ -14,6 +15,7 @@ function request.sanitize(ngx)
     ngx.req.clear_header(request.REQUEST_ID)
     ngx.req.clear_header(request.USER_ID)
     ngx.req.clear_header(request.WIKIA_USER_ID)
+    ngx.req.clear_header(request.SCHWARTZ_TOKEN)
 end
 
 function request.set_headers(ngx)    
