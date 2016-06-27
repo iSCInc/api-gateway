@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # How to use this:
 # 1. Add key "config/api-gateway/*" with the upstream host to
 #		your consul key value store.
