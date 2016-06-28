@@ -7,41 +7,6 @@ such as nginx to marshal authentication tokens embedded in HTTP cookies into a
 user id header suitable for user identification by services running behind the
 gateway.
 
-## Testing
-
-The lua source code is tested using [busted](http://olivinelabs.com/busted/). To run the tests do
-the following:
-
-```
-busted spec
-```
-
-The lua+nginx integration is tested using `Test::Nginx::Socket`. To run the
-tests, set `TEST_NGINX_BINARY` (see the Environment section below) and execute:
-
-```
-prove -r t/
-```
-
-See `t/basic.t` for the Perl dependencies and example code.
-
-## Local Integration Testing
-
-The integration testing local to this repository also uses busted. To run the
-integration tests do the following:
-
-```
-busted spec_integration
-```
-
-The integration tests require the following environment variables:
-
- * `USERNAME`: the user name used to request a token from helios
- * `PASSWORD`: the password used to request a token from helios
- * `LOGIN_URL`: the login URL for helios
- * `SERVICE_URL`: the service URL to attempt `GET` once a token has been
-	 aquired. This URL should require a token for the tests to work as expected.
-
 ## Resources
 
  * `/healthcheck`: Returns 200 status code on success. Checks to see that the
@@ -135,8 +100,40 @@ socat udp4-recvfrom:8600,reuseaddr,fork \
 Linux.
 
 
+## Testing
 
+The lua source code is tested using [busted](http://olivinelabs.com/busted/). To run the tests do
+the following:
 
+```
+docker run -p 8100:8100 -v $(pwd):/gateway -t -i  api-gateway busted spec 
+```
+
+The lua+nginx integration is tested using `Test::Nginx::Socket`. To run the
+tests, set `TEST_NGINX_BINARY` (see the Environment section below) and execute:
+
+```
+docker run -p 8100:8100 -v $(pwd):/gateway -t -i  api-gateway prove -r t/
+```
+
+See `t/basic.t` for the Perl dependencies and example code.
+
+## Local Integration Testing
+
+The integration testing local to this repository also uses busted. To run the
+integration tests do the following:
+
+```
+busted spec_integration
+```
+
+The integration tests require the following environment variables:
+
+ * `USERNAME`: the user name used to request a token from helios
+ * `PASSWORD`: the password used to request a token from helios
+ * `LOGIN_URL`: the login URL for helios
+ * `SERVICE_URL`: the service URL to attempt `GET` once a token has been
+	 aquired. This URL should require a token for the tests to work as expected.
 
 ## Deployment
 
