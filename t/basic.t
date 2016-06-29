@@ -32,7 +32,7 @@ our $Config = << 'CONFIG';
     }
 CONFIG
 
-plan tests => repeat_each(3) * 23;
+plan tests => repeat_each(3) * 32;
 
 no_root_location();
 run_tests();
@@ -138,3 +138,40 @@ MIRRORED-X-Forwarded-For: upstream_server, 127.0.0.1
 --- response_headers_like
 X-Trace-Id: [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}
 --- error_code: 200
+
+=== TEST 9: Headers - protect Cookie from CSRF attack without valid origin
+--- http_config eval: $::HttpConfig
+--- config eval: $::Config
+--- more_headers
+Cookie: access_token=token
+Origin: sine-qua-non.com
+--- request
+    GET /test/headers
+--- response_headers
+MIRRORED-X-User-Id: 
+MIRRORED-X-Wikia-UserId: 
+--- error_code: 200
+
+=== TEST 10: Headers - protect Cookie from CSRF attack with valid origin
+--- http_config eval: $::HttpConfig
+--- config eval: $::Config
+--- more_headers
+Cookie: access_token=token
+Origin: wikia.com
+--- request
+    GET /test/headers
+--- response_headers
+MIRRORED-X-User-Id: 90061
+MIRRORED-X-Wikia-UserId: 90061
+--- error_code: 200
+
+=== TEST 11: Headers - protect Cookie from CSRF attack without origin
+--- http_config eval: $::HttpConfig
+--- config eval: $::Config
+--- more_headers
+Cookie: access_token=token
+--- request
+    GET /test/headers
+--- response_headers
+MIRRORED-X-User-Id: 90061
+MIRRORED-X-Wikia-UserId: 90061

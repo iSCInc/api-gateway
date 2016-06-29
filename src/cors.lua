@@ -32,10 +32,13 @@ function cors.origin_matches_whitelist(origin_value)
   return false
 end
 
-function cors.get_origin_that_matches_whitelist(ngx)
+function cors.get_origin(ngx)
   local req_headers = ngx.req.get_headers(100)
-  local origin = req_headers[cors.origin_header]
+  return req_headers[cors.origin_header]
+end
 
+function cors.get_origin_that_matches_whitelist(ngx)
+  origin = cors.get_origin(ngx)
   if cors.origin_matches_whitelist(origin) then
     return origin
   else
