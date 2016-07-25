@@ -7,41 +7,6 @@ such as nginx to marshal authentication tokens embedded in HTTP cookies into a
 user id header suitable for user identification by services running behind the
 gateway.
 
-## Testing
-
-The lua source code is tested using [busted](http://olivinelabs.com/busted/). To run the tests do
-the following:
-
-```
-busted spec
-```
-
-The lua+nginx integration is tested using `Test::Nginx::Socket`. To run the
-tests, set `TEST_NGINX_BINARY` (see the Environment section below) and execute:
-
-```
-prove -r t/
-```
-
-See `t/basic.t` for the Perl dependencies and example code.
-
-## Local Integration Testing
-
-The integration testing local to this repository also uses busted. To run the
-integration tests do the following:
-
-```
-busted spec_integration
-```
-
-The integration tests require the following environment variables:
-
- * `USERNAME`: the user name used to request a token from helios
- * `PASSWORD`: the password used to request a token from helios
- * `LOGIN_URL`: the login URL for helios
- * `SERVICE_URL`: the service URL to attempt `GET` once a token has been
-	 aquired. This URL should require a token for the tests to work as expected.
-
 ## Resources
 
  * `/healthcheck`: Returns 200 status code on success. Checks to see that the
@@ -90,24 +55,35 @@ the environment as specificed by the `WIKIA_ENVIRONMENT` environment variable.
 
 ## Developing with Nginx Locally
 
+### API-gateway dev Docker image
+
+API gateway has some extensive dependencies. To make it easier to run on different platforms its been Dockerized for the purpose of development.
+
+Building image:
+```
+docker build -t api-gateway ./
+```
+
+
+# Running local instance
+
 The `scripts/` director contains helpers for stopping and starting nginx. The
 nginx config file in `nginx/conf/nginx.conf` should be enough to test.
 
 To start:
 
 ```
-./scripts/templatize
-./scripts/start-nginx
+# generate configs from consul
+docker run -v $(pwd):/gateway -t -i  api-gateway scripts/templatize
+
+# run
+docker run -p 8100:8100 -v $(pwd):/gateway -t -i  api-gateway scripts/run-nginx
 ```
 
 You can test the basic functionality with:
 
 ```
-curl -H “Cookie: access_token=<token>” http://127.0.0.1:8089/service/...
-```
-
-```
-./scripts/nginx-reload
+curl -H “Cookie: access_token=<token>” http://127.0.0.1:8100/service/...
 ```
 
 The current implementation relies upon DNS to resolve the load balancers. This
@@ -122,6 +98,42 @@ socat udp4-recvfrom:8600,reuseaddr,fork \
 
 `socat` can be installed via `homebrew` on OS X or via a package manager on
 Linux.
+
+
+## Testing
+
+The lua source code is tested using [busted](http://olivinelabs.com/busted/). To run the tests do
+the following:
+
+```
+docker run -p 8100:8100 -v $(pwd):/gateway -t -i  api-gateway busted spec 
+```
+
+The lua+nginx integration is tested using `Test::Nginx::Socket`. To run the
+tests, set `TEST_NGINX_BINARY` (see the Environment section below) and execute:
+
+```
+docker run -p 8100:8100 -v $(pwd):/gateway -t -i  api-gateway prove -r t/
+```
+
+See `t/basic.t` for the Perl dependencies and example code.
+
+## Local Integration Testing
+
+The integration testing local to this repository also uses busted. To run the
+integration tests do the following:
+
+```
+busted spec_integration
+```
+
+The integration tests require the following environment variables:
+
+ * `USERNAME`: the user name used to request a token from helios
+ * `PASSWORD`: the password used to request a token from helios
+ * `LOGIN_URL`: the login URL for helios
+ * `SERVICE_URL`: the service URL to attempt `GET` once a token has been
+	 aquired. This URL should require a token for the tests to work as expected.
 
 ## Deployment
 
@@ -140,44 +152,6 @@ dt push -a api-gateway -e prod
  * [lua-cjson](https://github.com/mpx/lua-cjson)
  * [nginx](http://nginx.org/) or [openresty](http://openresty.org)
  * [consul-template](https://github.com/hashicorp/consul-template)
-
-## Installing luarocks & openresty Dependencies
-
- See `scripts/install-luarocks.sh` for the script used to install the
- dependencies for travis. See also `scripts/install-openresty.sh`.
-
-## Installation on OS X
-
- If you are working on OS X consider using [openresty](http://openresty.org) for
- nginx. It comes configured to work with the api-gateway. You can install `openresty`
- on OS X using
-
- ```
- brew install homebrew/nginx/openresty
- ```
-
- If you need to add additional nginx modules to openresty you might find it
- helpful to install openresty with homebrew. If you go this route you can add
- nginx modules to the configuration with `brew edit openresty`. Then under the
- `install` block you can add additional modules by adding a line to the `args`
- array e.g.`"--with-http_realip_module"`.
-
-To install the Lua dependencies you will need `luarocks`. The script below can
-be used to install `luarocks` to the luajit used by the `openresty` installed by homebrew.
-
-```
- # set to your local path; the version might be different
- export LUAJIT_PATH=/usr/local/Cellar/openresty/1.7.10.1/luajit
- wget http://luarocks.org/releases/luarocks-2.0.11.tar.gz
- tar -xzvf luarocks-2.0.11.tar.gz
- cd luarocks-2.0.13/
- ./configure --prefix=$LUAJIT_PATH \
-     --with-lua=$LUAJIT_PATH \
-		 --lua-suffix=jit-2.1.0-alpha \
-	   --with-lua-include=$LUAJIT_PATH/include/luajit-2.1
- make
- make install
-```
 
 ### Troubleshooting
 

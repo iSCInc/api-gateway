@@ -1,2 +1,2 @@
 #!/bin/sh
-nginx -g "daemon off;" -c /gateway/nginx/conf/nginx.conf
+nginx -g "daemon off;" -c /gateway/nginx/conf/nginx.conf -p /gateway/nginx

@@ -1,4 +1,4 @@
-FROM reutersmedia/openresty-luarocks:latest
+FROM reutersmedia/openresty-luarocks:1.9.7.4
 
 WORKDIR /gateway
 RUN wget https://releases.hashicorp.com/consul-template/0.14.0/consul-template_0.14.0_linux_amd64.zip -O /tmp/consul.zip \
